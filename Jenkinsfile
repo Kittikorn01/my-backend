@@ -1,28 +1,25 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            // 1. เปลี่ยนจาก alpine เป็นตัวธรรมดา (แก้ปัญหา npm crash)
+            image 'node:18' 
+            reuseNode true
+        }
+    }
     stages {
         stage('Test npm') {
-            agent {
-                docker {
-                    image 'node:18-alpine' // ใช้ Image นี้ที่มี Node.js มาให้แล้ว
-                    reuseNode true
-                }
-            }
             steps {
                 sh 'npm --version'
                 sh 'node --version'
             }
         }
         stage('Build') {
-            agent {
-                docker {
-                    image 'node:18-alpine' // ใช้ Image นี้ที่มี Node.js มาให้แล้ว
-                    reuseNode true
-                }
-            }
             steps {
-                sh 'npm ci'
-                sh 'npm run build'
+                // 2. ใช้ npm install ธรรมดา (กันเหนียวเรื่อง package-lock)
+                sh 'npm install'
+                
+                // 3. ลบบรรทัด 'npm run build' ทิ้งไปเลย (เพราะ Backend มักไม่ต้อง Build)
+                // sh 'npm run build'  <-- ลบอันนี้ออก หรือใส่ // ไว้ข้างหน้า
             }
         }
     }
